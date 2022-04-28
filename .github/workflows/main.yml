@@ -9,9 +9,12 @@ on:
 
 jobs:
   build:
-    name: Build package on ROS
+    name: Build on ROS2 ${{ matrix.ros_distro }}
     runs-on: ubuntu-20.04
-    container: ros:galactic
+    container: ros:${{ matrix.ros_distro }}
+    strategy:
+      matrix:
+        ros_distro: [foxy, galactic]
 
     steps:
       - name: Create ROS2 workspace
@@ -23,6 +26,6 @@ jobs:
           path: 'ros2_ws/src/ros2_xsens_mti_driver'
       - name: Build using colcon
         run: |
-          . /opt/ros/galactic/setup.sh
+          . /opt/ros/${{ matrix.ros_distro }}/setup.sh
           cd ros2_ws
           colcon build --event-handlers console_cohesion+
