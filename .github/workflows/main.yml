@@ -7,9 +7,6 @@ on:
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
 jobs:
   build:
     name: Build package on ROS
@@ -24,10 +21,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: 'ros2_ws/src/ros2_xsens_mti_driver'
-      # - name: Install dependencies
-      #   run: |
-      #     rosdep update
-      #     rosdep install --default-yes --from-paths ros2_ws/src/ros2_xsens_mti_driver
       - name: Build using colcon
         run: |
           . /opt/ros/galactic/setup.sh
