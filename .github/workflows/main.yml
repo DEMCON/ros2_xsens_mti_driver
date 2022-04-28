@@ -28,13 +28,8 @@ jobs:
         run: |
           rosdep update
           rosdep install --default-yes --from-paths ros2_ws/src/ros2_xsens_mti_driver
-      - name: Build using colcon 2
-        run: |
-          source /opt/ros/galactic/setup.bash
-          cd ros2_ws
-
       - name: Build using colcon
         run: |
-          source /opt/ros/galactic/setup.bash
+          . /opt/ros/galactic/setup.sh
           cd ros2_ws
           colcon build --event-handlers console_cohesion+
