@@ -70,6 +70,7 @@
 #include <xscontroller/xsdevice_def.h>
 #include <xstypes/xsfilterprofilearray.h>
 #include <xstypes/xsresetmethod.h>
+#include <xstypes/xsstatusflag.h>
 #include <xscommon/journaller.h>
 
 #include "messagepublishers/packetcallback.hpp"
@@ -93,7 +94,8 @@
 XdaInterface::XdaInterface(const std::string & node_name, const rclcpp::NodeOptions & options)
 : Node(node_name, options),
   m_device(nullptr),
-  m_xdaCallback(*this)
+  m_xdaCallback(*this),
+  m_last_status(0)
 {
   declareCommonParameters();
   m_additional_logger = new AdditionalLoggerRos(this->get_logger().get_child("xs"));
@@ -119,6 +121,10 @@ void XdaInterface::spinFor(std::chrono::milliseconds timeout)
   if (!rosPacket.second.empty()) {
     for (auto & cb : m_callbacks) {
       cb->operator()(rosPacket.second, rosPacket.first);
+    }
+
+    if (rosPacket.second.containsStatus()) {
+      m_last_status = rosPacket.second.status();
     }
   }
 }
@@ -449,6 +455,36 @@ bool XdaInterface::prepare()
   }
 
   return true;
+}
+
+void XdaInterface::registerDiagnostics(diagnostic_updater::Updater & updater)
+{
+  assert(m_device != 0);
+
+  updater.setHardwareID(m_device->deviceId().toString().c_str());
+  updater.add("Status", this, &XdaInterface::produceDiagnostics);
+}
+
+void XdaInterface::produceDiagnostics(diagnostic_updater::DiagnosticStatusWrapper & stat)
+{
+  XsStatus xs_status(m_last_status);
+  const bool self_test_ok = (xs_status.get() & XSF_SelfTestOk) == XSF_SelfTestOk;
+  const bool orientation_valid = (xs_status.get() & XSF_OrientationValid) == XSF_OrientationValid;
+  const bool any_acc_clipped = xs_status.anyAccClipped();
+
+  if (!self_test_ok) {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Self test failed");
+  } else if (!orientation_valid) {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "orientation invalid");
+  } else if (any_acc_clipped) {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Acceleration clipped");
+  } else {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Ok");
+  }
+
+  stat.add("Self test ok", self_test_ok);
+  stat.add("Orientation valid", orientation_valid);
+  stat.add("Any acceleration clipped", any_acc_clipped);
 }
 
 void XdaInterface::close()

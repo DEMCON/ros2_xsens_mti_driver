@@ -60,6 +60,7 @@
 //
 
 #include <rclcpp/rclcpp.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include "xdainterface.hpp"
 
 #include <iostream>
@@ -78,6 +79,8 @@ int main(int argc, char * argv[])
   rclcpp::NodeOptions nodeOptions;
 
   auto xdaInterface = std::make_shared<XdaInterface>("xsens_driver", nodeOptions);
+  diagnostic_updater::Updater updater(xdaInterface);
+
   exec.add_node(xdaInterface);
   xdaInterface->registerPublishers();
 
@@ -88,6 +91,8 @@ int main(int argc, char * argv[])
   if (!xdaInterface->prepare()) {
     return -1;
   }
+
+  xdaInterface->registerDiagnostics(updater);
 
   while (rclcpp::ok()) {
     xdaInterface->spinFor(milliseconds(100));

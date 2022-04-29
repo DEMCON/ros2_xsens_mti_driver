@@ -63,7 +63,7 @@
 #define XDAINTERFACE_H
 
 #include <rclcpp/rclcpp.hpp>
-
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include "xdacallback.hpp"
 #include <xstypes/xsportinfo.h>
 
@@ -86,6 +86,7 @@ public:
 
   void spinFor(std::chrono::milliseconds timeout);
   void registerPublishers();
+  void registerDiagnostics(diagnostic_updater::Updater & updater);
 
   bool connectDevice();
   bool prepare();
@@ -99,6 +100,7 @@ private:
   void declareCommonParameters();
   bool configureDevice();
   bool configureAlignmentQuat(const std::string & name);
+  void produceDiagnostics(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   XsControl * m_control;
   XsDevice * m_device;
@@ -106,6 +108,7 @@ private:
   XdaCallback m_xdaCallback;
   std::list<PacketCallback *> m_callbacks;
   AdditionalLoggerRos * m_additional_logger;
+  uint32_t m_last_status;
 };
 
 #endif
