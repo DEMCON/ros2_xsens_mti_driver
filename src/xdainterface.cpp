@@ -471,6 +471,7 @@ void XdaInterface::produceDiagnostics(diagnostic_updater::DiagnosticStatusWrappe
   const bool self_test_ok = (xs_status.get() & XSF_SelfTestOk) == XSF_SelfTestOk;
   const bool orientation_valid = (xs_status.get() & XSF_OrientationValid) == XSF_OrientationValid;
   const bool any_acc_clipped = xs_status.anyAccClipped();
+  const bool any_gyr_clipped = xs_status.anyGyrClipped();
 
   if (!self_test_ok) {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Self test failed");
@@ -478,6 +479,8 @@ void XdaInterface::produceDiagnostics(diagnostic_updater::DiagnosticStatusWrappe
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "orientation invalid");
   } else if (any_acc_clipped) {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Acceleration clipped");
+  } else if (any_gyr_clipped) {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Gyroscope clipped");
   } else {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Ok");
   }
@@ -485,6 +488,8 @@ void XdaInterface::produceDiagnostics(diagnostic_updater::DiagnosticStatusWrappe
   stat.add("Self test ok", self_test_ok);
   stat.add("Orientation valid", orientation_valid);
   stat.add("Any acceleration clipped", any_acc_clipped);
+  stat.add("Any gyroscope clipped", any_gyr_clipped);
+
 }
 
 void XdaInterface::close()
